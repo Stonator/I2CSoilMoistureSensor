@@ -7,7 +7,7 @@
  * https://github.com/Apollon77/I2CSoilMoistureSensor                   *
  *                                                                      *
  * MIT license                                                          *
- *----------------------------------------------------------------------*/ 
+ *----------------------------------------------------------------------*/
 
 #ifndef I2CSOILMOISTURESENSOR_H
 #define I2CSOILMOISTURESENSOR_H
@@ -34,31 +34,103 @@
 #define SOILMOISTURESENSOR_GET_BUSY	        0x09 // (r)	    1 bytes
 
 
-class I2CSoilMoistureSensor {
-    public:
-        I2CSoilMoistureSensor(uint8_t addr = SOILMOISTURESENSOR_DEFAULT_ADDR);
+class I2CSoilMoistureSensor
+{
+public:
+  // Optionally set sensor I2C address if different from default
+  // Wire.begin needs to be called from outside of the class
+  I2CSoilMoistureSensor(uint8_t address = SOILMOISTURESENSOR_DEFAULT_ADDR);
 
-		void begin(bool wait = false);
-        unsigned int getCapacitance();
-        bool setAddress(int addr, bool reset);
-        void changeSensor(int addr, bool wait = false);
-        uint8_t getAddress();
-        void startMeasureLight();
-        unsigned int getLight(bool wait = false);
-        int getTemperature();
-        void resetSensor();
-        uint8_t getVersion();
-        void sleep();
-        bool isBusy();
 
-    private:
-		int sensorAddress;
+  // Sensor management
+public:
 
-        void writeI2CRegister8bit(int addr, int value);
-        void writeI2CRegister8bit(int addr, int reg, int value);
-        uint16_t readI2CRegister16bitUnsigned(int addr, byte reg);
-        int16_t readI2CRegister16bitSigned(int addr, byte reg);
-        uint8_t readI2CRegister8bit(int addr, int reg);
+  // Initializes anything ... it does a reset.
+  // When used without parameter or parameter value is false then a
+  // waiting time of at least 1 second is expected to give the sensor some time to boot up.
+  // Alternatively use true as parameter and the method waits for a second and returns after that.
+  // Returns true if successful, false if communication failed.
+  virtual bool begin(bool wait = false);
+
+  // Change I2C address of the sensor to the provided address (1..127)
+  // and do a reset after it in order for the new address to become effective if second parameter is true.
+  // Method returns true if the new address is set successfully on sensor.
+  // Returns true if successful, false if communication failed.
+  bool setAddress(uint8_t address, bool reset);
+
+  // Change the address (1..127) this instance is trying to read from and do a reset after to initialize.
+  // Returns true if successful, false if communication failed.
+  bool changeSensor(uint8_t address, bool wait = false);
+
+  // Return current Address of the Sensor
+  uint8_t getAddress();
+
+  // Resets sensor. Give the sensor 0.5-1 second time to boot up after reset.
+  // Returns true if successful, false if communication failed.
+  bool resetSensor();
+
+  // Get Firmware Version. 0x22 means 2.2
+  // Returns 0xFF if communication failed.
+  uint8_t getVersion();
+
+  // Sleep sensor. Initiates SLEEP_MODE_PWR_DOWN in the sensor's MCU.
+  // Returns true if successful, false if communication failed.
+  bool sleep();
+
+  // Check if sensor is busy. Returns true if a measurement is running.
+  bool isBusy();
+
+
+  // Sensor data
+public:
+
+  // Return measured Soil Moisture Capacitance
+  // Moisture is somewhat linear. More moisture will give you higher reading.
+  // Normally all sensors give about 290 - 310 as value in free air at 5V supply.
+  // Returns 0xFFFF if communication failed.
+  unsigned int getCapacitance();
+
+  // Starts the measurement for the Light sensor. Wait at least 3 seconds till you call method getLight to get the Light value.
+  // Returns true if successful, false if communication failed.
+  bool startMeasureLight();
+
+  // Read the Light Measurement from the sensor. When used without parameter or parameter value is false then a former call to
+  // method startMeasureLight and a waiting time of at least 3 seconds is expected.
+  // Alternatively use true as parameter and the method does the call to startMeasureLight and a 3 seconds delay automatically and no former call is needed.                                                      *
+  // The measurement gives 65535 in a dark room away form desk lamp - so more light, lower reading.
+  // When it's dark, it takes longer to measure light, reading the light register while measurement is in
+  // progress (e.g. wait time too short) will return the previous reading. Be aware, light sensor is pretty noisy.
+  // Returns 0xFFFF if communication failed.
+  unsigned int getLight(bool wait = false);
+
+  // Read the Temperature Measurement. Temperature is measured by the thermistor on the tip of the sensor.
+  // Calculated absolute measurement accuracy is better than 2%.
+  // The returned value is in degrees Celsius with factor 10, so need to divide by 10 to get real value.
+  // Returns -1 if communication failed.
+  int getTemperature();
+
+
+  // Abstraction layer to read and write sensor registers
+protected:
+
+  // Helper method to write an 8 bit value to the sensor via I2C
+  virtual bool writeI2CRegister8bit(uint8_t address, uint8_t value);
+
+  // Helper method to write an 8 bit value to the sensor via I2C to the given register
+  virtual bool writeI2CRegister8bit(uint8_t address, uint8_t reg, uint8_t value);
+
+  // Helper method to read a 16 bit unsigned value from the given register
+  virtual uint16_t readI2CRegister16bitUnsigned(uint8_t address, uint8_t reg);
+
+  // Helper method to read a 16 bit signed value from the given register
+  virtual int16_t readI2CRegister16bitSigned(uint8_t address, uint8_t reg);
+
+  // Helper method to read a 8 bit value from the given register
+  virtual uint8_t readI2CRegister8bit(uint8_t address, uint8_t reg);
+
+
+protected:
+  uint8_t sensorAddress;
 };
 
 #endif
