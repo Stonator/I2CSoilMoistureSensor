@@ -50,7 +50,7 @@ public:
   // waiting time of at least 1 second is expected to give the sensor some time to boot up.
   // Alternatively use true as parameter and the method waits for a second and returns after that.
   // Returns true if successful, false if communication failed.
-  virtual bool begin(bool wait = false);
+  bool begin(bool wait = false);
 
   // Change I2C address of the sensor to the provided address (1..127)
   // and do a reset after it in order for the new address to become effective if second parameter is true.
