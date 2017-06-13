@@ -14,10 +14,12 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="$(MSBuildThisFileDirectory)I2CSoilMoistureSensor.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)I2CSoilMoistureSensorBase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)I2CSoilMoistureSensor.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)I2CSoilMoistureSensorBase.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)SlowSoftI2CSoilMoistureSensor.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="$(MSBuildThisFileDirectory)keywords.txt" />
